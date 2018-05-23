@@ -4,34 +4,51 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import javax.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.chatmessenger.backend.chatmessenger.UserRepository;
 import com.chatmessenger.backend.chatmessenger.entity.User;
+import com.chatmessenger.backend.chatmessenger.repository.UserRepository;
+import com.chatmessenger.backend.chatmessenger.service.UserService;
 
 @RestController
 public class UserController {
 	
 	@Autowired
-	private UserRepository userRepository;
+	private UserService userService;
 	
 	@GetMapping("/users")
 	public List<User> getAllUsers() {
-		return userRepository.findAll();
+		return userService.getAllUsers();
 	}
 	
 	@GetMapping("/users/{id}")
-	public User getAllUsers(@PathVariable Long id) {
-		Optional<User> user = userRepository.findById(id);
-		if (user.isPresent()) {
-			return user.get();
+	public ResponseEntity<User> getUser(@PathVariable Long id) {
+		User user = userService.getUser(id);
+		if (user != null) {
+			return new ResponseEntity<User>(user, HttpStatus.ACCEPTED);
 		} else {
-			return null;
+			return new ResponseEntity<User>(HttpStatus.NOT_FOUND);	
 		}
 	}
+	
+	@PutMapping("/users")
+	public ResponseEntity<User> createUser(@RequestBody @Valid User user) {
+		user = userService.saveUser(user); 
+		if (user != null) {
+			return new ResponseEntity<>(user, HttpStatus.CREATED);
+		} else {
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+		}
+	}
+	
 	
 }
